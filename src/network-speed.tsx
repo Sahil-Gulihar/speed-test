@@ -18,7 +18,9 @@ interface SpeedData {
 // Get the active network interface dynamically
 async function getActiveInterface(): Promise<string> {
   try {
-    const { stdout } = await execPromise("/sbin/route get default | /usr/bin/grep interface | /usr/bin/awk '{print $2}'");
+    const { stdout } = await execPromise(
+      "/sbin/route get default | /usr/bin/grep interface | /usr/bin/awk '{print $2}'"
+    );
     const iface = stdout.trim();
     return iface || "en0"; // fallback to en0
   } catch {
