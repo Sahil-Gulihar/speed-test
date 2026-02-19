@@ -1,0 +1,39 @@
+name: Changelog Enforcer
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+    branches: [main, master]
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for skip-changelog label
+        id: skip
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labelNames = context.payload.pull_request?.labels?.map((l) => l.name) ?? []
+            const skip = labelNames.includes('skip-changelog')
+            core.setOutput('skip', skip)
+
+      - name: Enforce changelog
+        if: steps.skip.outputs.skip != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const extensionPaths = ['src/', 'package.json', 'package-lock.json', 'raycast-env.d.ts', 'icon.png']
+            const files = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            })
+            const filenames = files.data.map((f) => f.filename)
+            const hasChangelog = filenames.some((f) => f === 'CHANGELOG.md' || f.toLowerCase() === 'changelog.md')
+            const touchesExtension = filenames.some((f) =>
+              extensionPaths.some((p) => p.endsWith('/') ? f.startsWith(p) : f === p)
+            )
+            if (touchesExtension && !hasChangelog) {
+              core.setFailed('Extension files were changed but CHANGELOG.md was not updated. Please add a changelog entry or add the "skip-changelog" label.')
+            }
