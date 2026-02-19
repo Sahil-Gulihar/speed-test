@@ -1,7 +1,7 @@
 import { MenuBarExtra, launchCommand, LaunchType, open, Icon, Cache } from "@raycast/api";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const execPromise = promisify(exec);
 
@@ -17,7 +17,8 @@ interface SpeedData {
 
 async function getNetworkStats(): Promise<NetworkStats> {
   try {
-    const command = "/usr/sbin/netstat -ib | /usr/bin/grep -E 'en0.*Link' | /usr/bin/head -1 | /usr/bin/awk '{print $7, $10}'";
+    const command =
+      "/usr/sbin/netstat -ib | /usr/bin/grep -E 'en0.*Link' | /usr/bin/head -1 | /usr/bin/awk '{print $7, $10}'";
     const { stdout } = await execPromise(command);
     const trimmed = stdout.trim();
     if (!trimmed) return { bytesReceived: 0, bytesSent: 0 };
@@ -76,21 +77,13 @@ export default function Command() {
     return () => clearInterval(interval);
   }, []);
 
-  const menuBarTitle = isLoading
-    ? "..."
-    : `↓ ${speed.download} ↑ ${speed.upload}`;
+  const menuBarTitle = isLoading ? "..." : `↓ ${speed.download} ↑ ${speed.upload}`;
 
   return (
-    <MenuBarExtra icon={Icon.WiFi} title={menuBarTitle} isLoading={isLoading}>
+    <MenuBarExtra title={menuBarTitle} isLoading={isLoading}>
       <MenuBarExtra.Section title="Network Speed">
-        <MenuBarExtra.Item
-          title={`Download: ${speed.download}`}
-          icon={Icon.Download}
-        />
-        <MenuBarExtra.Item
-          title={`Upload: ${speed.upload}`}
-          icon={Icon.Upload}
-        />
+        <MenuBarExtra.Item title={`Download: ${speed.download}`} icon={Icon.Download} />
+        <MenuBarExtra.Item title={`Upload: ${speed.upload}`} icon={Icon.Upload} />
       </MenuBarExtra.Section>
 
       <MenuBarExtra.Section>
